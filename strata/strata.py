@@ -53,6 +53,8 @@ def get_subblock_imgs(img, orientation, reserved=False):
     elif orientation == LEFT:
         slices = itertools.product(quarters, upper_halves)
     else:
+        if orientation != RIGHT:
+            print orientation, reserved
         assert orientation == RIGHT
         slices = itertools.product(quarters, lower_halves)
 
@@ -253,12 +255,14 @@ class Block(object):
             return payload
 
         # Decode
-        col_or = detect_color_and_orientation(img)
-        self.color, self.orientation = col_or[0]
-        if len(col_or) > 1:
-            print 'WARNING: Ambiguous block:'
+        try:
+            [(color, orientation)] = detect_color_and_orientation(img)
+        except ValueError:
+            color, orientation = detect_color_and_orientation(img)[0]
+            print 'WARNING: Ambiguous block for bits', self.bit_idxs
             print img
             print '---'
+        self.color, self.orientation = color, orientation
 
         idx0, idx1, idx2 = self.bit_idxs
         payload[idx0] = self.color
@@ -327,7 +331,7 @@ def test_encode_decode():
     code = Block()
     code.encode(payload)
     img = code.render()
-    assert payload == code.decode(img)
+    assert payload == Block().decode(img)
 
 
 def main():
