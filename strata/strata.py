@@ -97,29 +97,51 @@ def detect_color_and_orientation(img):
     The return value is a list of (color, orientation) tuples that describe the
     detected color and orientation. If the block is ambiguous, the list contains
     more than one tuple."""
-    assert img.shape[0] == img.shape[1]
 
+    # Detect the color(s) of the block
+    nblack = 0
+    nwhite = 0
+    for subimg in get_subblock_imgs(img, LEFT) + get_subblock_imgs(img, RIGHT):
+        b, w = count_pixels(subimg)
+        if b > w:
+            nblack += 1
+        elif b < w:
+            nwhite += 1
+        else:
+            # This subblock does not have a unique color
+            pass
+    if nblack > nwhite:
+        colors = (0, )
+    elif nblack < nwhite:
+        colors = (1, )
+    else:
+        colors = (0, 1)
+
+    # For each orientation, count the pixels of each color
     n2 = img.shape[0]/2
-    top = img[:n2, :]
-    bottom = img[n2:, :]
-    left = img[:, :n2]
-    right = img[:, n2:]
+    slices = {TOP: img[:n2, :],
+              BOTTOM: img[n2:, :],
+              LEFT: img[:, :n2],
+              RIGHT: img[:, n2:]}
+    counts = {0: list(), 1: list()}
+    for orientation, slice_ in slices.iteritems():
+        b, w = count_pixels(slice_)
+        counts[0].append((b, orientation))
+        counts[1].append((w, orientation))
 
-    # Find the slice that has most pixels of the same color.
-    max_count = -1
-    result = list()
-    for orientation, slice_ in zip((TOP, LEFT, RIGHT, BOTTOM),
-                                   (top, left, right, bottom)):
-        nblack, nwhite = count_pixels(slice_)
-        color = 1 if (nwhite > nblack) else 0
-        count = max(nblack, nwhite)
-        if count > max_count:
-            result = [(color, orientation)]
-            max_count = count
-        elif count == max_count:
-            result.append((color, orientation))
+    # For each detected color, add the orientation(s) with
+    # the maximal count
+    res = list()
+    for col in colors:
+        # Find the maximum
+        max_count = max(counts[col], key=lambda x: x[0])[0]
+        # Append the (color, orientation) tuples for all entries
+        # with maximal count.
+        for count, orientation in counts[col]:
+            if count == max_count:
+                res.append((col, orientation))
 
-    return result
+    return res
 
 
 class Block(object):

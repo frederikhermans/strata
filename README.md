@@ -2,7 +2,8 @@
 
 This a work-in-progress implementation of Strata, as described in the paper
 "Strata: layered coding for scalable visual communication" by Hu et al.
-(http://dl.acm.org/citation.cfm?id=2639132)
+(http://dl.acm.org/citation.cfm?id=2639132,
+http://www.sigmobile.org/mobicom/2014/talks/slides_2_3.pptx)
 
 Please note that this is not an authoritative implementation and the
 author of this source is not affiliated with the authors of Strata.
